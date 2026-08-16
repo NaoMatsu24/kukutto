@@ -384,6 +384,20 @@ footer small { font-size: .75rem; font-weight: 600; }
   .guide-character, .result-message .friend, .garden-guide-character, .footer-character { width: 50px; height: 50px; flex-basis: 50px; }
 }
 
+@media (max-width: 480px) {
+  main { width: min(calc(100% - 20px), 960px); }
+  .site-header { padding-inline: 10px; }
+  nav { gap: 6px; }
+  nav button { min-width: 0; padding-inline: 4px; white-space: nowrap; font-size: clamp(.78rem, 3.7vw, .95rem); }
+  .home-page .home-dashboard { gap: 16px; }
+  .garden-home { grid-template-columns: 1fr; gap: 8px; padding: 20px 18px 18px; text-align: center; }
+  .garden-picture { width: 96px; height: 96px; }
+  .garden-info { justify-items: center; width: 100%; }
+  .garden-info > span:not(.garden-label):not(.garden-progress) { width: 100%; }
+  .garden-label { white-space: nowrap; }
+  .garden-progress { width: min(240px, 100%); }
+}
+
 @media (orientation: landscape) and (max-height: 800px) {
   .quiz-card { padding: 16px 24px; }
   .quiz-card .progress { margin: 8px 0 14px; }
