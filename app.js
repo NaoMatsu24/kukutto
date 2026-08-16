@@ -1204,8 +1204,12 @@ showPage("home");
 
 const installPrompt = document.querySelector("#install-prompt");
 const installButton = document.querySelector("#install-app");
+const installTitle = document.querySelector("#install-prompt-title");
 const installMessage = document.querySelector("#install-prompt-message");
 let deferredInstallPrompt = null;
+
+const isiPhoneOrIPad = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const isAndroid = /Android/i.test(navigator.userAgent);
 
 function runningAsInstalledApp() {
   return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
@@ -1219,7 +1223,11 @@ window.addEventListener("beforeinstallprompt", event => {
   if (runningAsInstalledApp()) return;
   event.preventDefault();
   deferredInstallPrompt = event;
-  installButton.textContent = "アプリを追加";
+  installTitle.textContent = isAndroid ? "スマホにアプリを入れますか？" : "パソコンにアプリを入れますか？";
+  installMessage.textContent = isAndroid
+    ? "ホーム画面から、くくっと！をすぐに開けるようになります。"
+    : "デスクトップやアプリ一覧から、くくっと！をすぐに開けるようになります。";
+  installButton.textContent = isAndroid ? "インストールする" : "パソコンに追加";
   installPrompt.hidden = false;
 });
 
@@ -1231,15 +1239,17 @@ installButton.addEventListener("click", async () => {
     hideInstallPrompt();
     return;
   }
-  installMessage.textContent = "Safariの共有ボタンを押し、「ホーム画面に追加」を選んでください。";
+  installTitle.textContent = "ホーム画面への追加方法";
+  installMessage.textContent = "ブラウザの共有ボタンを押し、「ホーム画面に追加」→「追加」の順に選んでください。";
   installButton.hidden = true;
 });
 
 document.querySelector("#close-install-prompt").addEventListener("click", hideInstallPrompt);
 window.addEventListener("appinstalled", hideInstallPrompt);
 
-const isiPhoneOrIPad = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 if (isiPhoneOrIPad && !runningAsInstalledApp()) {
+  installTitle.textContent = "iPhone・iPadに追加しますか？";
+  installMessage.textContent = "ホーム画面に追加すると、アイコンからすぐに開けます。";
   installButton.textContent = "追加方法を見る";
   installPrompt.hidden = false;
 }
