@@ -40,6 +40,7 @@ const UI_ICONS = {
   keyboard: '<rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/>',
   mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0013 0M12 17.5V21m-3 0h6"/>',
   grid: '<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/>',
+  eye: '<path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z"/><circle cx="12" cy="12" r="2.5"/>',
   shuffle: '<path d="M4 7h3c5 0 5 10 10 10h3m-3-3l3 3-3 3M4 17h3c2.5 0 3.7-2.5 5-5 1.3-2.5 2.5-5 5-5h3m-3-3l3 3-3 3"/>',
   trophy: '<path d="M8 4h8v4c0 4-1.8 6-4 6s-4-2-4-6V4zm4 10v4m-4 2h8M8 6H4v2c0 2 1.5 3.5 4 3.5M16 6h4v2c0 2-1.5 3.5-4 3.5"/>',
   flower: '<circle cx="12" cy="12" r="2.5"/><circle cx="12" cy="6.5" r="3"/><circle cx="17.5" cy="12" r="3"/><circle cx="12" cy="17.5" r="3"/><circle cx="6.5" cy="12" r="3"/>',
@@ -253,6 +254,7 @@ function showStagePicker() {
         <button class="mode-button ${selectedAnswerMode === "number" ? "selected" : ""}" type="button" data-mode="number" aria-pressed="${selectedAnswerMode === "number"}">${iconHtml("keyboard")} 数字で入力</button>
         <button class="mode-button ${selectedAnswerMode === "voice" ? "selected" : ""}" type="button" data-mode="voice" aria-pressed="${selectedAnswerMode === "voice"}" ${speechAvailable ? "" : "disabled"}>${iconHtml("mic")} ${speechAvailable ? "声で<ruby>答<rt>こた</rt></ruby>える" : "音声入力は使えません"}</button>
         <button class="mode-button ${selectedAnswerMode === "choice" ? "selected" : ""}" type="button" data-mode="choice" aria-pressed="${selectedAnswerMode === "choice"}">${iconHtml("grid")} 4たく</button>
+        <button class="mode-button ${selectedAnswerMode === "self" ? "selected" : ""}" type="button" data-mode="self" aria-pressed="${selectedAnswerMode === "self"}">${iconHtml("eye")} 自分でチェック</button>
       </div>
     </fieldset>
     <fieldset class="picker-step question-count">
@@ -402,17 +404,18 @@ function showQuestion(positionQuizAtTop = false) {
     <div class="test-head"><span>${stageName}</span><span>${quiz.index + 1} / ${quiz.stopOnWrong ? "最大100" : quiz.problems.length}問</span><button id="quit-test" class="quit-test" type="button">テストをやめる</button></div>
     <div class="progress"><div style="width:${quiz.index / quiz.problems.length * 100}%"></div></div>
     <div class="question" aria-label="${problem.a} かける ${problem.b}">${problem.a} × ${problem.b}</div>
-    <form id="answer-form" class="answer-row ${quiz.answerMode === "choice" ? "answer-row-hidden" : ""}">
+    <form id="answer-form" class="answer-row ${["choice", "self"].includes(quiz.answerMode) ? "answer-row-hidden" : ""}">
       <input id="answer" class="answer-input ${quiz.answerMode === "voice" ? "visually-hidden" : ""}" type="text" inputmode="none" autocomplete="off" aria-label="こたえ" readonly required>
       ${quiz.answerMode === "voice" ? `<button id="speak-answer" class="button secondary" type="button">${iconHtml("mic")} 声で<ruby>答<rt>こた</rt></ruby>える</button>` : ""}
       ${quiz.answerMode === "number" ? `<button class="button" type="submit"><ruby>答<rt>こた</rt></ruby>える</button>` : ""}
     </form>
     ${quiz.answerMode === "choice" ? `<div class="choice-grid" aria-label="4つの答え">${makeAnswerChoices(problem).map(answer => `<button class="choice-button" type="button" data-answer="${answer}">${answer}</button>`).join("")}</div>` : ""}
+    ${quiz.answerMode === "self" ? `<div id="self-check-controls" class="self-check-controls"><p>頭の中や声に出して答えてから、答えを見てね。</p><button id="reveal-self-answer" class="button secondary" type="button">${iconHtml("eye")} <ruby>答<rt>こた</rt></ruby>えを見る</button></div>` : ""}
     ${quiz.answerMode === "number" ? `<div class="number-keypad" aria-label="数字ボタン">
       ${[1,2,3,4,5,6,7,8,9,0].map(number => `<button type="button" data-keypad-digit="${number}">${number}</button>`).join("")}
       <button id="erase-answer" class="erase-key" type="button">⌫ 1字消す</button>
     </div>` : ""}
-    <div class="unknown-answer"><button id="unknown-answer" class="button light" type="button">わからない</button></div>
+    ${quiz.answerMode === "self" ? "" : `<div class="unknown-answer"><button id="unknown-answer" class="button light" type="button">わからない</button></div>`}
     <p id="speech-status" class="speech-status" aria-live="polite">${quiz.answerMode === "voice" ? "マイクを準備しています…" : ""}</p>
     <div id="feedback" class="feedback" aria-live="polite"></div>
   </section>`;
@@ -426,8 +429,9 @@ function showQuestion(positionQuizAtTop = false) {
     });
   }
   app.querySelector("#quit-test").addEventListener("click", quitTest);
-  app.querySelector("#unknown-answer").addEventListener("click", answerUnknown);
+  app.querySelector("#unknown-answer")?.addEventListener("click", answerUnknown);
   app.querySelector("#answer-form").addEventListener("submit", answerQuestion);
+  app.querySelector("#reveal-self-answer")?.addEventListener("click", revealSelfCheckAnswer);
   app.querySelectorAll("[data-keypad-digit]").forEach(button => button.addEventListener("click", () => enterAnswerDigit(button.dataset.keypadDigit)));
   app.querySelector("#erase-answer")?.addEventListener("click", eraseAnswerDigit);
   app.querySelector(".quiz-card").addEventListener("keydown", handlePhysicalNumberKey);
@@ -437,6 +441,8 @@ function showQuestion(positionQuizAtTop = false) {
   } else if (quiz.answerMode === "choice") {
     app.querySelectorAll("[data-answer]").forEach(button => button.addEventListener("click", () => answerWithChoice(button.dataset.answer)));
     app.querySelector("[data-answer]").focus({ preventScroll: true });
+  } else if (quiz.answerMode === "self") {
+    app.querySelector("#reveal-self-answer").focus({ preventScroll: true });
   } else app.querySelector("#answer").focus({ preventScroll: true });
 }
 
@@ -494,6 +500,24 @@ function answerWithChoice(answer) {
 function answerUnknown() {
   if (!quiz || quiz.answered) return;
   recordAnswer(false, "わからない");
+}
+
+function revealSelfCheckAnswer() {
+  if (!quiz || quiz.answered || quiz.answerMode !== "self") return;
+  const problem = quiz.problems[quiz.index];
+  const controls = app.querySelector("#self-check-controls");
+  if (!controls) return;
+  controls.innerHTML = `<div class="self-check-answer">${problem.a} × ${problem.b} ＝ <strong>${problem.a * problem.b}</strong></div>
+    <p>自分の答えと同じだったかな？</p>
+    <div class="self-check-actions">
+      <button class="button green" type="button" data-self-check="correct">できた</button>
+      <button class="button light" type="button" data-self-check="retry">もう一度</button>
+    </div>`;
+  controls.querySelectorAll("[data-self-check]").forEach(button => button.addEventListener("click", () => {
+    const isCorrect = button.dataset.selfCheck === "correct";
+    recordAnswer(isCorrect, isCorrect ? problem.a * problem.b : "もう一度");
+  }));
+  controls.querySelector("[data-self-check]").focus();
 }
 
 function stopListening() {
@@ -637,6 +661,7 @@ function recordAnswer(isCorrect, answer) {
   const answerInput = app.querySelector("#answer");
   if (answerInput) answerInput.disabled = true;
   app.querySelectorAll("[data-answer]").forEach(button => button.disabled = true);
+  app.querySelectorAll("[data-self-check]").forEach(button => button.disabled = true);
   app.querySelectorAll("[data-keypad-digit], #erase-answer").forEach(button => button.disabled = true);
   const unknownButton = app.querySelector("#unknown-answer");
   if (unknownButton) unknownButton.disabled = true;
@@ -826,16 +851,26 @@ function dayKey(date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 }
 
-function sevenDayLatest() {
+function sevenDayAverages() {
   const cutoff = new Date();
   cutoff.setHours(0, 0, 0, 0);
   cutoff.setDate(cutoff.getDate() - 6);
   const byDay = new Map();
   state.results.forEach(result => {
     if (new Date(result.date) < cutoff) return;
-    byDay.set(dayKey(result.date), { ...result, accuracy: Math.round(result.correct / result.total * 100), secondsPerQuestion: result.seconds / result.total });
+    const key = dayKey(result.date);
+    const day = byDay.get(key) || { date: result.date, tests: 0, accuracyTotal: 0, secondsPerQuestionTotal: 0 };
+    day.tests++;
+    day.accuracyTotal += result.correct / result.total * 100;
+    day.secondsPerQuestionTotal += result.seconds / result.total;
+    byDay.set(key, day);
   });
-  return [...byDay.values()].sort((a, b) => new Date(a.date) - new Date(b.date));
+  return [...byDay.values()].map(day => ({
+    date: day.date,
+    tests: day.tests,
+    accuracy: Math.round(day.accuracyTotal / day.tests),
+    secondsPerQuestion: day.secondsPerQuestionTotal / day.tests
+  })).sort((a, b) => new Date(a.date) - new Date(b.date));
 }
 
 function chartSvg(data, field, max, time = false) {
@@ -889,7 +924,7 @@ function monthlyAverages(results) {
 }
 
 function showRecords() {
-  const recent = sevenDayLatest();
+  const recent = sevenDayAverages();
   const best = state.results.length ? Math.max(...state.results.map(r => Math.round(r.correct / r.total * 100))) + "%" : "―";
   const fastest = state.results.length ? Math.min(...state.results.map(r => r.seconds / r.total)).toFixed(1) + "秒" : "―";
   const total = state.results.reduce((sum, r) => sum + r.total, 0);
@@ -913,7 +948,6 @@ function showRecords() {
       <div class="summary-box">一番<ruby>苦手<rt>にがて</rt></ruby><strong>${weak ? `${weak.a}×${weak.b}` : "なし"}</strong></div>
     </div>
     <h2>直近7日間のグラフ</h2>
-    <p class="record-chart-note">同じ日に何回かテストしたときは、その日の<strong>一番新しい<ruby>結果<rt>けっか</rt></ruby></strong>を使います。</p>
     <div class="chart-grid">
       <div class="chart-card"><h3>正答率（%）</h3>${chartSvg(recent, "accuracy", 100)}</div>
       <div class="chart-card"><h3>1問あたりの時間（秒）</h3>${chartSvg(recent, "secondsPerQuestion", Math.max(10, ...recent.map(r => r.secondsPerQuestion)), true)}</div>
@@ -1180,18 +1214,17 @@ function plantNewSeed() {
 }
 
 function showResearch() {
-  const data = sevenDayLatest();
+  const data = sevenDayAverages();
   const first = data[0], latest = data.at(-1);
   const weak = weakestProblem();
   const improved = statRows().filter(s => s.wrong > 0 && s.recentCorrect >= 2).sort((a,b) => b.recentCorrect-a.recentCorrect)[0];
   app.innerHTML = `<section class="card">
     <h1>7日間のまとめ</h1>
     <div class="character-guide">${pictureHtml("guide-character", CHARACTER_PICTURES.smile)}<span>どのくらい上手になったか見てみよう！</span></div>
-    <p class="note">同じ日のテストは、一番新しい<ruby>結果<rt>けっか</rt></ruby>を使っています。</p>
     ${data.length ? `<div class="chart-grid"><div class="chart-card"><h3>正答率の<ruby>変化<rt>へんか</rt></ruby></h3>${chartSvg(data,"accuracy",100)}</div><div class="chart-card"><h3>1問あたりの時間</h3>${chartSvg(data,"secondsPerQuestion",Math.max(10,...data.map(r=>r.secondsPerQuestion)),true)}</div></div>
     <div class="research-grid">
-      <div class="research-item"><strong>最初の日（${formatDate(first.date)}）</strong><br>${first.correct}問正解・${first.seconds}秒</div>
-      <div class="research-item"><strong>一番新しい日（${formatDate(latest.date)}）</strong><br>${latest.correct}問正解・${latest.seconds}秒</div>
+      <div class="research-item"><strong>最初の日（${formatDate(first.date)}）</strong><br>平均正答率 ${first.accuracy}%・1問平均 ${Math.round(first.secondsPerQuestion * 10) / 10}秒</div>
+      <div class="research-item"><strong>一番新しい日（${formatDate(latest.date)}）</strong><br>平均正答率 ${latest.accuracy}%・1問平均 ${Math.round(latest.secondsPerQuestion * 10) / 10}秒</div>
       <div class="research-item"><strong>一番<ruby>苦手<rt>にがて</rt></ruby>な問題</strong><br>${weak ? `${weak.a}×${weak.b}（正解率${weak.rate}%）` : "まだありません"}</div>
       <div class="research-item"><strong>できるようになった問題</strong><br>${improved ? `${improved.a}×${improved.b}（さいきん${improved.recentCorrect}回れんぞく正解）` : "これから見つけよう！"}</div>
     </div>
