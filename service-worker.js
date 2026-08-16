@@ -1,4 +1,4 @@
-const CACHE_NAME = "kukutto-offline-v27";
+const CACHE_NAME = "kukutto-offline-v28";
 const APP_FILES = [
   "./",
   "./index.html",

@@ -58,7 +58,7 @@ button:focus-visible, input:focus-visible { outline: 4px solid rgba(75, 159, 225
   padding: 18px max(18px, calc((100% - 1050px) / 2));
   background: rgba(255, 255, 255, .88);
   border-bottom: 0;
-  box-shadow: none;
+  box-shadow: 0 5px 12px rgba(45, 41, 38, .16);
   backdrop-filter: blur(14px);
 }
 .brand { display: flex; align-items: center; gap: 8px; padding: 6px 14px 6px 8px; color: var(--ink); font-size: 1.3rem; font-weight: 900; letter-spacing: .02em; background: var(--yellow); border: 2px solid var(--ink); border-radius: 999px; box-shadow: 3px 3px 0 var(--ink); white-space: nowrap; transform: rotate(-1deg); }
