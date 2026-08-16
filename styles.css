@@ -234,7 +234,8 @@ h2 { color: var(--orange-dark); }
 .weak-list-note { margin: 22px 0 8px; color: var(--green-dark); text-align: center; font-size: .95rem; font-weight: 800; }
 .weak-table-scroll { overflow-x: auto; }
 .practice-mode { margin: 22px 0 14px; text-align: center; }
-.practice-mode > strong { font-size: 1.1rem; }
+.weak-step-title { display: flex; align-items: center; justify-content: center; gap: 2px; margin: 22px 0 14px; padding: 0; border: 0; color: var(--ink); background: transparent; font-size: 1.2rem; }
+.weak-step-title .step-number { background: var(--green); }
 .practice-mode .mode-button.selected { border-color: var(--ink); color: white; background: var(--green); box-shadow: 3px 3px 0 var(--ink); }
 .practice-choice-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin: 14px 0 26px; }
 .practice-choice-button, .practice-choice-unavailable { display: grid; place-items: center; min-height: 105px; padding: 18px; border: 2px solid var(--ink); border-radius: 20px; text-align: center; }
@@ -399,6 +400,10 @@ footer small { font-size: .75rem; font-weight: 600; }
   .character-guide, .result-message, .garden-penguin-message, footer { gap: 16px; font-size: 1.05rem; }
   .result-message { margin-top: 22px; }
   .guide-character, .result-message .friend, .garden-guide-character, .footer-character { width: 50px; height: 50px; flex-basis: 50px; }
+  .result-card .result-message { flex-direction: column; gap: 16px; margin: 24px 0 30px; }
+  .result-card .result-message > span { order: 1; text-align: center; }
+  .result-card .result-message .friend { order: 2; width: 92px; height: 92px; flex-basis: 92px; }
+  .result-card .actions { margin-top: 0; }
 }
 
 @media (max-width: 480px) {

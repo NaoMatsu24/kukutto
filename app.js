@@ -795,20 +795,21 @@ function showWeak() {
     <h1><ruby>苦手<rt>にがて</rt></ruby>な九九</h1>
     <div class="character-guide">${pictureHtml("guide-character", CHARACTER_PICTURES.thinking)}<span>正解率が<ruby>低<rt>ひく</rt></ruby>い<ruby>順<rt>じゅん</rt></ruby>に<ruby>並<rt>なら</rt></ruby>んでいるよ。一番上の問題から<ruby>練習<rt>れんしゅう</rt></ruby>しよう！</span></div>
     <div class="practice-mode">
-      <strong><ruby>答<rt>こた</rt></ruby>え方</strong>
+      <h2 class="weak-step-title"><span class="step-number">1</span><ruby>答<rt>こた</rt></ruby>え方</h2>
       <div class="compact-mode" aria-label="答え方">
         <button class="mode-button ${selectedAnswerMode === "number" ? "selected" : ""}" type="button" data-weak-mode="number">${iconHtml("keyboard")} 数字で入力</button>
         <button class="mode-button ${selectedAnswerMode === "voice" ? "selected" : ""}" type="button" data-weak-mode="voice">${iconHtml("mic")} 声で<ruby>答<rt>こた</rt></ruby>える</button>
         <button class="mode-button ${selectedAnswerMode === "choice" ? "selected" : ""}" type="button" data-weak-mode="choice">${iconHtml("grid")} 4たく</button>
+        <button class="mode-button ${selectedAnswerMode === "self" ? "selected" : ""}" type="button" data-weak-mode="self">${iconHtml("eye")} 自分でチェック</button>
       </div>
     </div>
+    <h2 class="weak-step-title"><span class="step-number">2</span><ruby>練習<rt>れんしゅう</rt></ruby>する<ruby>内容<rt>ないよう</rt></ruby></h2>
     <div class="practice-choice-grid">
       ${reviewRows.length ? `<button class="practice-choice-button review" type="button" data-practice="review" aria-pressed="false"><strong>${iconHtml("calendar")} 今日の<ruby>復習<rt>ふくしゅう</rt></ruby>　${reviewRows.length}問</strong><small>復習日になった問題</small></button>` : `<div class="practice-choice-unavailable review"><strong>${iconHtml("calendar")} 今日の復習</strong><small>今日はありません</small></div>`}
       ${rows.length ? `<button class="practice-choice-button weak" type="button" data-practice="weak" aria-pressed="false"><strong>${iconHtml("target")} <ruby>苦手<rt>にがて</rt></ruby>を練習　${Math.min(10, rows.length)}問</strong><small>正答率80％未満の問題</small></button>` : `<div class="practice-choice-unavailable weak"><strong>${iconHtml("target")} 苦手を練習</strong><small>苦手な問題はありません</small></div>`}
     </div>
     <div class="actions practice-start"><button id="start-practice" class="button green" type="button" disabled><img class="start-button-character" src="${CHARACTER_PICTURES.support}" alt=""><span id="practice-start-label">練習をスタート</span></button></div>
     ${rows.length ? `<p class="weak-list-note">正答率が80％以上になると、苦手を克服した問題としてこの一覧から外れるよ。</p>
-    <p class="weak-icon-guide">${iconHtml("target", "rank-icon")} いちばん苦手${recoveryCandidate ? `　${iconHtml("sprout", "recovery-icon")} 苦手克服までもう少し` : ""}</p>
     <div class="weak-table-scroll"><table class="data-table weak-table"><thead><tr><th>問題</th><th>出た回数</th><th>正解</th><th>間違い</th><th>正解率</th><th>次の復習</th></tr></thead><tbody>
       ${rows.map((s, i) => {
         const recovering = recoveryCandidate && s.a === recoveryCandidate.a && s.b === recoveryCandidate.b;
@@ -817,7 +818,8 @@ function showWeak() {
           : recovering ? `<span class="visually-hidden">苦手克服までもう少し：</span>${iconHtml("sprout", "recovery-icon")}` : "";
         return `<tr class="${i === 0 ? "worst" : recovering ? "recovering" : ""}"><td>${marker}${s.a}×${s.b}</td><td>${s.attempts}回</td><td>${s.correct}回</td><td>${s.wrong}回</td><td>${s.rate}%</td><td>${reviewDateLabel(s.nextReview)}</td></tr>`;
       }).join("")}
-    </tbody></table></div>` : `<div class="empty">まだ、<ruby>苦手<rt>にがて</rt></ruby>な問題はないよ。<br>テストをすると、ここに<ruby>記録<rt>きろく</rt></ruby>が出るよ。</div>`}
+    </tbody></table></div>
+    <p class="weak-icon-guide">${iconHtml("target", "rank-icon")} いちばん苦手${recoveryCandidate ? `　${iconHtml("sprout", "recovery-icon")} 苦手克服までもう少し` : ""}</p>` : `<div class="empty">まだ、<ruby>苦手<rt>にがて</rt></ruby>な問題はないよ。<br>テストをすると、ここに<ruby>記録<rt>きろく</rt></ruby>が出るよ。</div>`}
   </section>`;
   app.querySelectorAll("[data-weak-mode]").forEach(button => button.addEventListener("click", () => {
     selectedAnswerMode = button.dataset.weakMode;
