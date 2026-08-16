@@ -335,6 +335,13 @@ footer { display: flex; align-items: center; justify-content: center; gap: 24px;
 .footer-character + span { display: grid; }
 footer small { font-size: .75rem; font-weight: 600; }
 .footer-character { width: 65px; height: 65px; flex: 0 0 65px; object-fit: contain; }
+.install-prompt[hidden] { display: none; }
+.install-prompt { position: fixed; z-index: 90; right: 18px; bottom: 18px; left: 18px; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 16px; width: min(760px, calc(100% - 36px)); margin: 0 auto; padding: 16px 18px; border: 3px solid var(--ink); border-radius: 24px; background: #fffdf2; box-shadow: 0 8px 0 var(--ink), 0 18px 45px rgba(45, 41, 38, .24); }
+.install-prompt-character { width: 64px; height: 64px; object-fit: contain; }
+.install-prompt-copy { display: grid; line-height: 1.5; }
+.install-prompt-copy strong { color: var(--green-dark); font-size: 1.15rem; }
+.install-prompt-actions { display: flex; gap: 9px; }
+.install-prompt .button { padding: 10px 14px; white-space: nowrap; }
 
 @keyframes page-in {
   from { opacity: 0; transform: translateY(8px); }
@@ -396,6 +403,10 @@ footer small { font-size: .75rem; font-weight: 600; }
   .garden-info > span:not(.garden-label):not(.garden-progress) { width: 100%; }
   .garden-label { white-space: nowrap; }
   .garden-progress { width: min(240px, 100%); }
+  .install-prompt { grid-template-columns: auto 1fr; gap: 10px; padding: 14px; }
+  .install-prompt-character { width: 52px; height: 52px; }
+  .install-prompt-actions { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+  .install-prompt .button { min-width: 0; padding-inline: 8px; }
 }
 
 @media (orientation: landscape) and (max-height: 800px) {

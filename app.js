@@ -1202,6 +1202,48 @@ function showResearch() {
 
 showPage("home");
 
+const installPrompt = document.querySelector("#install-prompt");
+const installButton = document.querySelector("#install-app");
+const installMessage = document.querySelector("#install-prompt-message");
+let deferredInstallPrompt = null;
+
+function runningAsInstalledApp() {
+  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+}
+
+function hideInstallPrompt() {
+  installPrompt.hidden = true;
+}
+
+window.addEventListener("beforeinstallprompt", event => {
+  if (runningAsInstalledApp()) return;
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  installButton.textContent = "アプリを追加";
+  installPrompt.hidden = false;
+});
+
+installButton.addEventListener("click", async () => {
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    hideInstallPrompt();
+    return;
+  }
+  installMessage.textContent = "Safariの共有ボタンを押し、「ホーム画面に追加」を選んでください。";
+  installButton.hidden = true;
+});
+
+document.querySelector("#close-install-prompt").addEventListener("click", hideInstallPrompt);
+window.addEventListener("appinstalled", hideInstallPrompt);
+
+const isiPhoneOrIPad = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+if (isiPhoneOrIPad && !runningAsInstalledApp()) {
+  installButton.textContent = "追加方法を見る";
+  installPrompt.hidden = false;
+}
+
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("./service-worker.js").catch(error => {
