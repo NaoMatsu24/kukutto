@@ -400,7 +400,8 @@ function showQuestion(positionQuizAtTop = false) {
   quiz.answered = false;
   const problem = quiz.problems[quiz.index];
   const stageName = quiz.stage === "random" ? "ランダム" : Array.isArray(quiz.stage) ? `${quiz.stage.join("・")}の段` : ["間違い直し", "苦手を練習", "今日の復習"].includes(quiz.stage) ? quiz.stage : `${quiz.stage}の段`;
-  app.innerHTML = `<section class="card quiz-card">
+  const isPracticeQuiz = ["苦手を練習", "今日の復習"].includes(quiz.stage);
+  app.innerHTML = `<section class="card quiz-card ${isPracticeQuiz ? "practice-quiz" : ""}">
     <div class="test-head"><span>${stageName}</span><span>${quiz.index + 1} / ${quiz.stopOnWrong ? "最大100" : quiz.problems.length}問</span><button id="quit-test" class="quit-test" type="button">テストをやめる</button></div>
     <div class="progress"><div style="width:${quiz.index / quiz.problems.length * 100}%"></div></div>
     <div class="question" aria-label="${problem.a} かける ${problem.b}">${problem.a} × ${problem.b}</div>
@@ -409,7 +410,7 @@ function showQuestion(positionQuizAtTop = false) {
       ${quiz.answerMode === "voice" ? `<button id="speak-answer" class="button secondary" type="button">${iconHtml("mic")} 声で<ruby>答<rt>こた</rt></ruby>える</button>` : ""}
       ${quiz.answerMode === "number" ? `<button class="button" type="submit"><ruby>答<rt>こた</rt></ruby>える</button>` : ""}
     </form>
-    ${quiz.answerMode === "choice" ? `<div class="choice-grid" aria-label="4つの答え">${makeAnswerChoices(problem).map(answer => `<button class="choice-button" type="button" data-answer="${answer}">${answer}</button>`).join("")}</div>` : ""}
+    ${quiz.answerMode === "choice" ? `<div class="choice-grid" aria-label="4つの答え">${makeAnswerChoices(problem).map(answer => `<button class="choice-button" type="button" data-answer="${answer}" aria-pressed="false">${answer}</button>`).join("")}</div>` : ""}
     ${quiz.answerMode === "self" ? `<div id="self-check-controls" class="self-check-controls"><p>頭の中や声に出して答えてから、答えを見てね。</p><button id="reveal-self-answer" class="button secondary" type="button">${iconHtml("eye")} <ruby>答<rt>こた</rt></ruby>えを見る</button></div>` : ""}
     ${quiz.answerMode === "number" ? `<div class="number-keypad" aria-label="数字ボタン">
       ${[1,2,3,4,5,6,7,8,9,0].map(number => `<button type="button" data-keypad-digit="${number}">${number}</button>`).join("")}
@@ -439,7 +440,7 @@ function showQuestion(positionQuizAtTop = false) {
     setUpSpeechButton();
     startListening();
   } else if (quiz.answerMode === "choice") {
-    app.querySelectorAll("[data-answer]").forEach(button => button.addEventListener("click", () => answerWithChoice(button.dataset.answer)));
+    app.querySelectorAll("[data-answer]").forEach(button => button.addEventListener("click", () => answerWithChoice(button)));
     app.querySelector("[data-answer]").focus({ preventScroll: true });
   } else if (quiz.answerMode === "self") {
     app.querySelector("#reveal-self-answer").focus({ preventScroll: true });
@@ -491,8 +492,14 @@ function makeAnswerChoices(problem) {
   return [...choices].sort(() => Math.random() - .5);
 }
 
-function answerWithChoice(answer) {
+function answerWithChoice(button) {
   if (!quiz || quiz.answered) return;
+  const answer = button.dataset.answer;
+  app.querySelectorAll("[data-answer]").forEach(choice => {
+    const selected = choice === button;
+    choice.classList.toggle("selected", selected);
+    choice.setAttribute("aria-pressed", String(selected));
+  });
   app.querySelector("#answer").value = answer;
   app.querySelector("#answer-form").requestSubmit();
 }
@@ -940,6 +947,14 @@ function showRecords() {
   recordsView.page = Math.min(recordsView.page, pageCount);
   const pageResults = visibleResults.slice((recordsView.page - 1) * pageSize, recordsView.page * pageSize);
   const averages = monthlyAverages(state.results);
+  const mobileResultCards = pageResults.map(result => `<article class="record-mobile-card">
+    <div><strong>日付</strong><span>${formatDate(result.date, true)}</span></div>
+    <div><strong>段</strong><span>${result.stage === "random" ? "ランダム" : result.stage}</span></div>
+    <div><strong>結果</strong><span>${result.total}問中${result.correct}問</span></div>
+    <div><strong>正答率</strong><span>${Math.round(result.correct / result.total * 100)}%</span></div>
+    <div><strong>時間</strong><span>${result.seconds}秒</span></div>
+    <div><strong>間違い</strong><span>${result.mistakes.length ? result.mistakes.map(problem => `${problem.a}×${problem.b}`).join("、") : "なし"}</span></div>
+  </article>`).join("");
   app.innerHTML = `<section class="card records-page">
     <h1><ruby>記録<rt>きろく</rt></ruby></h1>
     <div class="character-guide records-guide">${pictureHtml("guide-character", CHARACTER_PICTURES.smile)}<span>がんばった<ruby>記録<rt>きろく</rt></ruby>を、いっしょに見てみよう！</span></div>
@@ -964,7 +979,7 @@ function showRecords() {
       <label>表示する件数<select id="record-range"><option value="30" ${recordsView.range === "30" ? "selected" : ""}>直近30件</option><option value="all" ${recordsView.range === "all" ? "selected" : ""}>すべて</option></select></label>
       <button id="download-records" class="button secondary">CSVで保存</button>
     </div>
-    ${pageResults.length ? `<div class="records-table-scroll" tabindex="0" aria-label="今までの結果（スクロールできます）"><table class="data-table"><thead><tr><th>日付</th><th>段</th><th><ruby>結果<rt>けっか</rt></ruby></th><th>正答率</th><th>時間</th><th>間違い</th></tr></thead><tbody>${pageResults.map(r => `<tr><td data-label="日付">${formatDate(r.date,true)}</td><td data-label="段">${r.stage === "random" ? "ランダム" : r.stage}</td><td data-label="結果">${r.total}問中${r.correct}問</td><td data-label="正答率">${Math.round(r.correct/r.total*100)}%</td><td data-label="時間">${r.seconds}秒</td><td data-label="間違い">${r.mistakes.length ? r.mistakes.map(p => `${p.a}×${p.b}`).join("、") : "なし"}</td></tr>`).join("")}</tbody></table></div>` : `<div class="empty">この月の<ruby>記録<rt>きろく</rt></ruby>はありません。</div>`}
+    ${pageResults.length ? `<div class="records-table-scroll records-desktop-list" tabindex="0" aria-label="今までの結果（スクロールできます）"><table class="data-table"><thead><tr><th>日付</th><th>段</th><th><ruby>結果<rt>けっか</rt></ruby></th><th>正答率</th><th>時間</th><th>間違い</th></tr></thead><tbody>${pageResults.map(r => `<tr><td>${formatDate(r.date,true)}</td><td>${r.stage === "random" ? "ランダム" : r.stage}</td><td>${r.total}問中${r.correct}問</td><td>${Math.round(r.correct/r.total*100)}%</td><td>${r.seconds}秒</td><td>${r.mistakes.length ? r.mistakes.map(p => `${p.a}×${p.b}`).join("、") : "なし"}</td></tr>`).join("")}</tbody></table></div><div class="records-mobile-list" tabindex="0" aria-label="今までの結果（スクロールできます）">${mobileResultCards}</div>` : `<div class="empty">この月の<ruby>記録<rt>きろく</rt></ruby>はありません。</div>`}
     ${pageCount > 1 ? `<div class="pagination"><button id="previous-records" class="button light" ${recordsView.page === 1 ? "disabled" : ""}>前へ</button><strong>${recordsView.page} / ${pageCount}ページ</strong><button id="next-records" class="button light" ${recordsView.page === pageCount ? "disabled" : ""}>次へ</button></div>` : ""}` : `<div class="empty">まだ<ruby>記録<rt>きろく</rt></ruby>がないよ。まずはテストしてみよう！</div>`}
     <h2>全データのバックアップ</h2>
     <div class="backup-tools">
