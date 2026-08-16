@@ -728,7 +728,7 @@ function showResult(result, previous, recovered) {
   const perfect = result.correct === result.total;
   const resultPicture = perfect ? CHARACTER_PICTURES.celebrate : result.correct / result.total >= .8 ? CHARACTER_PICTURES.smile : CHARACTER_PICTURES.support;
   app.innerHTML = `<section class="card result-card ${perfect ? "celebration" : ""}">
-    ${perfect ? `<h1>${iconHtml("trophy", "title-icon")} パーフェクト！</h1>` : "<h1 class=\"section-title\">テスト<ruby>結果<rt>けっか</rt></ruby></h1>"}
+    ${perfect ? `<h1 class="perfect-title">${iconHtml("trophy", "title-icon")}<span>パーフェクト！</span></h1>` : "<h1 class=\"section-title\">テスト<ruby>結果<rt>けっか</rt></ruby></h1>"}
     <div class="score">${result.total}問中 ${result.correct}問正解</div>
     <p class="section-title">かかった時間：<strong>${result.seconds}秒</strong></p>
     <div class="result-message">${pictureHtml("friend", resultPicture)}<span>${effortMessages(result, previous, recovered).join("<br>")}</span></div>
@@ -928,7 +928,7 @@ function showRecords() {
       <label>表示する件数<select id="record-range"><option value="30" ${recordsView.range === "30" ? "selected" : ""}>直近30件</option><option value="all" ${recordsView.range === "all" ? "selected" : ""}>すべて</option></select></label>
       <button id="download-records" class="button secondary">CSVで保存</button>
     </div>
-    ${pageResults.length ? `<div class="records-table-scroll" tabindex="0" aria-label="今までの結果（スクロールできます）"><table class="data-table"><thead><tr><th>日付</th><th>段</th><th><ruby>結果<rt>けっか</rt></ruby></th><th>正答率</th><th>時間</th><th>間違い</th></tr></thead><tbody>${pageResults.map(r => `<tr><td>${formatDate(r.date,true)}</td><td>${r.stage === "random" ? "ランダム" : r.stage}</td><td>${r.total}問中${r.correct}問</td><td>${Math.round(r.correct/r.total*100)}%</td><td>${r.seconds}秒</td><td>${r.mistakes.length ? r.mistakes.map(p => `${p.a}×${p.b}`).join("、") : "なし"}</td></tr>`).join("")}</tbody></table></div>` : `<div class="empty">この月の<ruby>記録<rt>きろく</rt></ruby>はありません。</div>`}
+    ${pageResults.length ? `<div class="records-table-scroll" tabindex="0" aria-label="今までの結果（スクロールできます）"><table class="data-table"><thead><tr><th>日付</th><th>段</th><th><ruby>結果<rt>けっか</rt></ruby></th><th>正答率</th><th>時間</th><th>間違い</th></tr></thead><tbody>${pageResults.map(r => `<tr><td data-label="日付">${formatDate(r.date,true)}</td><td data-label="段">${r.stage === "random" ? "ランダム" : r.stage}</td><td data-label="結果">${r.total}問中${r.correct}問</td><td data-label="正答率">${Math.round(r.correct/r.total*100)}%</td><td data-label="時間">${r.seconds}秒</td><td data-label="間違い">${r.mistakes.length ? r.mistakes.map(p => `${p.a}×${p.b}`).join("、") : "なし"}</td></tr>`).join("")}</tbody></table></div>` : `<div class="empty">この月の<ruby>記録<rt>きろく</rt></ruby>はありません。</div>`}
     ${pageCount > 1 ? `<div class="pagination"><button id="previous-records" class="button light" ${recordsView.page === 1 ? "disabled" : ""}>前へ</button><strong>${recordsView.page} / ${pageCount}ページ</strong><button id="next-records" class="button light" ${recordsView.page === pageCount ? "disabled" : ""}>次へ</button></div>` : ""}` : `<div class="empty">まだ<ruby>記録<rt>きろく</rt></ruby>がないよ。まずはテストしてみよう！</div>`}
     <h2>全データのバックアップ</h2>
     <div class="backup-tools">
@@ -1254,10 +1254,42 @@ if (isiPhoneOrIPad && !runningAsInstalledApp()) {
   installPrompt.hidden = false;
 }
 
+const updatePrompt = document.querySelector("#update-prompt");
+let waitingServiceWorker = null;
+let updateRequested = false;
+
+function showUpdatePrompt(worker) {
+  waitingServiceWorker = worker;
+  hideInstallPrompt();
+  updatePrompt.hidden = false;
+}
+
+document.querySelector("#apply-update").addEventListener("click", () => {
+  if (!waitingServiceWorker) return;
+  updateRequested = true;
+  waitingServiceWorker.postMessage({ type: "SKIP_WAITING" });
+});
+
+document.querySelector("#close-update-prompt").addEventListener("click", () => {
+  updatePrompt.hidden = true;
+});
+
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./service-worker.js").catch(error => {
+    navigator.serviceWorker.register("./service-worker.js").then(registration => {
+      if (registration.waiting && navigator.serviceWorker.controller) showUpdatePrompt(registration.waiting);
+      registration.addEventListener("updatefound", () => {
+        const worker = registration.installing;
+        if (!worker) return;
+        worker.addEventListener("statechange", () => {
+          if (worker.state === "installed" && navigator.serviceWorker.controller) showUpdatePrompt(worker);
+        });
+      });
+    }).catch(error => {
       console.warn("オフライン機能を準備できませんでした。", error);
     });
+  });
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (updateRequested) window.location.reload();
   });
 }

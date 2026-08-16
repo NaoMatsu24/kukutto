@@ -1,4 +1,4 @@
-const CACHE_NAME = "kukutto-offline-v8";
+const CACHE_NAME = "kukutto-offline-v11";
 const APP_FILES = [
   "./",
   "./index.html",
@@ -30,7 +30,11 @@ const APP_FILES = [
 ];
 
 self.addEventListener("install", event => {
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_FILES)).then(() => self.skipWaiting()));
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_FILES)));
+});
+
+self.addEventListener("message", event => {
+  if (event.data?.type === "SKIP_WAITING") self.skipWaiting();
 });
 
 self.addEventListener("activate", event => {
