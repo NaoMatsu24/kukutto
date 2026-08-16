@@ -70,6 +70,7 @@ let state = loadData();
 let quiz = null;
 let nextQuestionTimer = null;
 let speechRecognition = null;
+let speechPermissionBlocked = false;
 let selectedAnswerMode = "number";
 let recordsView = { range: "30", month: "all", page: 1 };
 
@@ -241,6 +242,8 @@ function gardenStatus() {
 function showStagePicker() {
   const stages = Array.from({ length: 8 }, (_, i) => i + 2);
   const selectedStages = new Set();
+  const speechAvailable = Boolean(window.SpeechRecognition || window.webkitSpeechRecognition);
+  if (!speechAvailable && selectedAnswerMode === "voice") selectedAnswerMode = "number";
   app.innerHTML = `<section class="card test-picker">
     <h1 class="section-title">どのテストにする？</h1>
     <div class="character-guide test-picker-guide">${pictureHtml("guide-character", CHARACTER_PICTURES.support)}<span>4つ<ruby>選<rt>えら</rt></ruby>んだらスタート！</span></div>
@@ -248,7 +251,7 @@ function showStagePicker() {
       <legend><span class="step-number">1</span><ruby>答<rt>こた</rt></ruby>え方</legend>
       <div class="picker-options mode-options">
         <button class="mode-button ${selectedAnswerMode === "number" ? "selected" : ""}" type="button" data-mode="number" aria-pressed="${selectedAnswerMode === "number"}">${iconHtml("keyboard")} 数字で入力</button>
-        <button class="mode-button ${selectedAnswerMode === "voice" ? "selected" : ""}" type="button" data-mode="voice" aria-pressed="${selectedAnswerMode === "voice"}">${iconHtml("mic")} 声で<ruby>答<rt>こた</rt></ruby>える</button>
+        <button class="mode-button ${selectedAnswerMode === "voice" ? "selected" : ""}" type="button" data-mode="voice" aria-pressed="${selectedAnswerMode === "voice"}" ${speechAvailable ? "" : "disabled"}>${iconHtml("mic")} ${speechAvailable ? "声で<ruby>答<rt>こた</rt></ruby>える" : "音声入力は使えません"}</button>
         <button class="mode-button ${selectedAnswerMode === "choice" ? "selected" : ""}" type="button" data-mode="choice" aria-pressed="${selectedAnswerMode === "choice"}">${iconHtml("grid")} 4たく</button>
       </div>
     </fieldset>
@@ -369,6 +372,7 @@ function makeSelectedStageProblems(stages, count) {
 
 function startQuiz(stage, retryProblems = null) {
   stopListening();
+  speechPermissionBlocked = false;
   clearTimeout(nextQuestionTimer);
   nextQuestionTimer = null;
   const stopOnWrong = !retryProblems && state.settings.questionCount === "until-wrong";
@@ -399,11 +403,15 @@ function showQuestion(positionQuizAtTop = false) {
     <div class="progress"><div style="width:${quiz.index / quiz.problems.length * 100}%"></div></div>
     <div class="question" aria-label="${problem.a} かける ${problem.b}">${problem.a} × ${problem.b}</div>
     <form id="answer-form" class="answer-row ${quiz.answerMode === "choice" ? "answer-row-hidden" : ""}">
-      <input id="answer" class="answer-input ${quiz.answerMode === "voice" ? "visually-hidden" : ""}" type="number" inputmode="numeric" min="0" max="100" autocomplete="off" aria-label="こたえ" required>
+      <input id="answer" class="answer-input ${quiz.answerMode === "voice" ? "visually-hidden" : ""}" type="text" inputmode="none" autocomplete="off" aria-label="こたえ" readonly required>
       ${quiz.answerMode === "voice" ? `<button id="speak-answer" class="button secondary" type="button">${iconHtml("mic")} 声で<ruby>答<rt>こた</rt></ruby>える</button>` : ""}
       ${quiz.answerMode === "number" ? `<button class="button" type="submit"><ruby>答<rt>こた</rt></ruby>える</button>` : ""}
     </form>
     ${quiz.answerMode === "choice" ? `<div class="choice-grid" aria-label="4つの答え">${makeAnswerChoices(problem).map(answer => `<button class="choice-button" type="button" data-answer="${answer}">${answer}</button>`).join("")}</div>` : ""}
+    ${quiz.answerMode === "number" ? `<div class="number-keypad" aria-label="数字ボタン">
+      ${[1,2,3,4,5,6,7,8,9,0].map(number => `<button type="button" data-keypad-digit="${number}">${number}</button>`).join("")}
+      <button id="erase-answer" class="erase-key" type="button">⌫ 1字消す</button>
+    </div>` : ""}
     <div class="unknown-answer"><button id="unknown-answer" class="button light" type="button">わからない</button></div>
     <p id="speech-status" class="speech-status" aria-live="polite">${quiz.answerMode === "voice" ? "マイクを準備しています…" : ""}</p>
     <div id="feedback" class="feedback" aria-live="polite"></div>
@@ -420,6 +428,9 @@ function showQuestion(positionQuizAtTop = false) {
   app.querySelector("#quit-test").addEventListener("click", quitTest);
   app.querySelector("#unknown-answer").addEventListener("click", answerUnknown);
   app.querySelector("#answer-form").addEventListener("submit", answerQuestion);
+  app.querySelectorAll("[data-keypad-digit]").forEach(button => button.addEventListener("click", () => enterAnswerDigit(button.dataset.keypadDigit)));
+  app.querySelector("#erase-answer")?.addEventListener("click", eraseAnswerDigit);
+  app.querySelector(".quiz-card").addEventListener("keydown", handlePhysicalNumberKey);
   if (quiz.answerMode === "voice") {
     setUpSpeechButton();
     startListening();
@@ -427,6 +438,30 @@ function showQuestion(positionQuizAtTop = false) {
     app.querySelectorAll("[data-answer]").forEach(button => button.addEventListener("click", () => answerWithChoice(button.dataset.answer)));
     app.querySelector("[data-answer]").focus({ preventScroll: true });
   } else app.querySelector("#answer").focus({ preventScroll: true });
+}
+
+function enterAnswerDigit(digit) {
+  const input = app.querySelector("#answer");
+  if (!input || !quiz || quiz.answered) return;
+  const nextValue = `${input.value}${digit}`;
+  if (nextValue.length <= 3 && Number(nextValue) <= 100) input.value = nextValue;
+}
+
+function eraseAnswerDigit() {
+  const input = app.querySelector("#answer");
+  if (!input || !quiz || quiz.answered) return;
+  input.value = input.value.slice(0, -1);
+}
+
+function handlePhysicalNumberKey(event) {
+  if (!quiz || quiz.answered || quiz.answerMode !== "number") return;
+  if (/^\d$/.test(event.key)) {
+    event.preventDefault();
+    enterAnswerDigit(event.key);
+  } else if (event.key === "Backspace" || event.key === "Delete") {
+    event.preventDefault();
+    eraseAnswerDigit();
+  }
 }
 
 function quitTest() {
@@ -487,9 +522,6 @@ function setUpSpeechButton() {
   if (!SpeechRecognition) {
     button.disabled = true;
     button.innerHTML = `${iconHtml("mic")} 声の回答は使えません`;
-    const input = app.querySelector("#answer");
-    input.classList.remove("visually-hidden");
-    input.insertAdjacentHTML("afterend", `<button class="button" type="submit"><ruby>答<rt>こた</rt></ruby>える</button>`);
     return;
   }
   if (speechRecognition) {
@@ -540,6 +572,7 @@ function startListening() {
     const currentStatus = app.querySelector("#speech-status");
     if (!currentStatus) return;
     if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+      speechPermissionBlocked = true;
       currentStatus.textContent = "マイクを使えるようにしてから、もう一度おしてね。";
     } else if (event.error !== "aborted") {
       currentStatus.textContent = "うまく聞き取れませんでした。もう一度ためしてね。";
@@ -548,10 +581,15 @@ function startListening() {
   recognition.onend = () => {
     speechRecognition = null;
     const currentButton = app.querySelector("#speak-answer");
-    if (!quiz?.answered && currentButton) {
-      currentButton.disabled = false;
-      currentButton.innerHTML = `${iconHtml("mic")} もう一度きく`;
-      currentButton.addEventListener("click", startListening, { once: true });
+    if (quiz?.answerMode === "voice" && !quiz.answered && currentButton && !speechPermissionBlocked) {
+      currentButton.disabled = true;
+      currentButton.innerHTML = `${iconHtml("mic")} きいています…`;
+      const currentStatus = app.querySelector("#speech-status");
+      if (currentStatus) currentStatus.textContent = "音声入力を続けています。数字で答えてね。";
+      setTimeout(startListening, 250);
+    } else if (!quiz?.answered && currentButton) {
+      currentButton.disabled = true;
+      currentButton.innerHTML = `${iconHtml("mic")} 音声入力を使えません`;
     }
   };
   recognition.start();
@@ -599,6 +637,7 @@ function recordAnswer(isCorrect, answer) {
   const answerInput = app.querySelector("#answer");
   if (answerInput) answerInput.disabled = true;
   app.querySelectorAll("[data-answer]").forEach(button => button.disabled = true);
+  app.querySelectorAll("[data-keypad-digit], #erase-answer").forEach(button => button.disabled = true);
   const unknownButton = app.querySelector("#unknown-answer");
   if (unknownButton) unknownButton.disabled = true;
   const submit = app.querySelector("#answer-form button[type='submit']");
@@ -1079,9 +1118,8 @@ function showGarden(showCollectionPreview = false) {
       return `<article class="flower-card ${flowerKind.rarity === "rare" ? "rare" : ""}">
       ${flowerKind.rarity === "rare" ? `<span class="rare-badge">★ レア</span>` : ""}
       ${gardenPicture(GARDEN_STAGES.at(-1), "flower-picture", flowerKind)}
-      <strong>${index + 1}こ目の花</strong>
+      <strong>${formatDate(flower.date)}に完成</strong>
       <small>${flowerKind.name}</small>
-      <small>${formatDate(flower.date)}に完成</small>
     </article>`;
     }).join("")}</div>` : `<div class="garden-penguin-message collection-empty">${pictureHtml("garden-guide-character", CHARACTER_PICTURES.support)}<span>最初の花を育てて、ここにかざろう！</span></div>`}
     <div class="collection-preview-action"><button id="toggle-collection-preview" class="button secondary" type="button">${showCollectionPreview ? "見本を閉じる" : "花がたまった見本を見る"}</button></div>
@@ -1163,3 +1201,11 @@ function showResearch() {
 }
 
 showPage("home");
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js").catch(error => {
+      console.warn("オフライン機能を準備できませんでした。", error);
+    });
+  });
+}
