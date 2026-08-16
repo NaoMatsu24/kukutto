@@ -61,6 +61,16 @@ button:focus-visible, input:focus-visible { outline: 4px solid rgba(75, 159, 225
   box-shadow: 0 5px 12px rgba(45, 41, 38, .16);
   backdrop-filter: blur(14px);
 }
+.site-header::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: -12px;
+  left: 0;
+  height: 12px;
+  background: linear-gradient(to bottom, rgba(45, 41, 38, .18), transparent);
+  pointer-events: none;
+}
 .brand { display: flex; align-items: center; gap: 8px; padding: 6px 14px 6px 8px; color: var(--ink); font-size: 1.3rem; font-weight: 900; letter-spacing: .02em; background: var(--yellow); border: 2px solid var(--ink); border-radius: 999px; box-shadow: 3px 3px 0 var(--ink); white-space: nowrap; transform: rotate(-1deg); }
 .brand img { width: 42px; height: 42px; object-fit: contain; }
 .home-title { font-family: "Hiragino Maru Gothic ProN", "Hiragino Sans", "Yu Gothic", sans-serif; font-weight: 900; letter-spacing: .02em; }
