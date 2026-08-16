@@ -149,7 +149,6 @@ h2 { color: var(--orange-dark); }
 .stage-button:hover { transform: translateY(-3px); box-shadow: var(--shadow-small); }
 .stage-button:active { transform: translateY(2px); border-bottom-width: 2px; }
 .stage-button.selected { color: #fff; background: var(--orange); box-shadow: inset 0 0 0 2px #fff, 0 4px 0 var(--ink); transform: translateY(-1px); }
-.stage-button.selected::after, .test-picker .mode-button.selected::after { content: "✓"; margin-left: 7px; font-weight: 900; }
 .stage-button.random { grid-column: span 4; }
 .stage-selection-status { min-height: 1.8em; margin: 14px 0 0; color: var(--muted); text-align: center; font-weight: 800; }
 #start-selected-stages { min-width: 310px; padding: 15px 28px 15px 18px; display: inline-flex; align-items: center; justify-content: center; gap: 12px; font-size: 1.3rem; }
@@ -162,7 +161,6 @@ h2 { color: var(--orange-dark); }
 .question-count label:has(input:checked) strong { color: white; }
 .recommended-badge { padding: 2px 8px; border-radius: 999px; color: white; background: var(--green-dark); }
 .recommended-count:has(input:checked) .recommended-badge { color: var(--green-dark); background: white; }
-.picker-step label:has(input:checked)::after { content: "✓"; position: absolute; top: 5px; right: 8px; font-weight: 900; }
 .picker-step label input { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; }
 .picker-step label:focus-within { outline: 4px solid rgba(75, 159, 225, .3); outline-offset: 3px; }
 .mode-button { min-width: 180px; margin: 6px; padding: 14px 20px; border: 2px solid #d9dde3; border-radius: 15px; background: white; color: var(--muted); font-weight: 900; transition: all .15s ease; }
