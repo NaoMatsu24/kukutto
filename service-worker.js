@@ -1,4 +1,4 @@
-const CACHE_NAME = "kukutto-offline-v11";
+const CACHE_NAME = "kukutto-offline-v12";
 const APP_FILES = [
   "./",
   "./index.html",
@@ -24,9 +24,9 @@ const APP_FILES = [
   "./images/garden/sunflower.png",
   "./images/garden/two-leaves.png",
   "./images/garden/white-cosmos.png",
-  "./images/icons/app-icon-title-v2-192.png",
-  "./images/icons/app-icon-title-v2-512.png",
-  "./images/icons/apple-touch-icon-title-v2.png"
+  "./images/icons/app-icon-192.png",
+  "./images/icons/app-icon-512.png",
+  "./images/icons/apple-touch-icon.png"
 ];
 
 self.addEventListener("install", event => {
