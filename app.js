@@ -809,7 +809,7 @@ function showWeak() {
     <div class="actions practice-start"><button id="start-practice" class="button green" type="button" disabled><img class="start-button-character" src="${CHARACTER_PICTURES.support}" alt=""><span id="practice-start-label">練習をスタート</span></button></div>
     ${rows.length ? `<p class="weak-list-note">正答率が80％以上になると、苦手を克服した問題としてこの一覧から外れるよ。</p>
     <p class="weak-icon-guide">${iconHtml("target", "rank-icon")} いちばん苦手${recoveryCandidate ? `　${iconHtml("sprout", "recovery-icon")} 苦手克服までもう少し` : ""}</p>
-    <div style="overflow-x:auto"><table class="data-table"><thead><tr><th>問題</th><th>出た回数</th><th>正解</th><th>間違い</th><th>正解率</th><th>次の復習</th></tr></thead><tbody>
+    <div class="weak-table-scroll"><table class="data-table weak-table"><thead><tr><th>問題</th><th>出た回数</th><th>正解</th><th>間違い</th><th>正解率</th><th>次の復習</th></tr></thead><tbody>
       ${rows.map((s, i) => {
         const recovering = recoveryCandidate && s.a === recoveryCandidate.a && s.b === recoveryCandidate.b;
         const marker = i === 0

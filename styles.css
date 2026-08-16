@@ -139,7 +139,7 @@ h2 { color: var(--orange-dark); }
 .test-picker-guide { margin-bottom: 26px; }
 .picker-step { margin: 24px 0; padding: 12px 0 18px; border: 0; border-radius: 0; background: transparent; box-shadow: none; text-align: center; }
 .picker-step legend { padding: 0 12px; color: var(--ink); font-size: 1.2rem; font-weight: 900; }
-.step-number { display: inline-grid; place-items: center; width: 34px; height: 34px; margin-right: 9px; border: 2px solid var(--ink); border-radius: 50%; color: white; background: var(--orange); box-shadow: 2px 2px 0 var(--ink); }
+.step-number { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; margin-right: 9px; border: 2px solid var(--ink); border-radius: 50%; color: white; background: var(--orange); box-shadow: 2px 2px 0 var(--ink); font-family: Arial, sans-serif; line-height: 1; vertical-align: middle; }
 .picker-options { display: grid; gap: 12px; justify-content: center; }
 .mode-options { grid-template-columns: repeat(4, minmax(150px, 1fr)); }
 .count-options { grid-template-columns: repeat(4, minmax(130px, 1fr)); }
@@ -232,13 +232,15 @@ h2 { color: var(--orange-dark); }
 .data-table tr.recovering { background: #effae9; }
 .weak-icon-guide { display: flex; align-items: center; justify-content: center; gap: 5px; color: var(--muted); font-size: .95rem; font-weight: 800; }
 .weak-list-note { margin: 22px 0 8px; color: var(--green-dark); text-align: center; font-size: .95rem; font-weight: 800; }
+.weak-table-scroll { overflow-x: auto; }
 .practice-mode { margin: 22px 0 14px; text-align: center; }
 .practice-mode > strong { font-size: 1.1rem; }
+.practice-mode .mode-button.selected { border-color: var(--ink); color: white; background: var(--green); box-shadow: 3px 3px 0 var(--ink); }
 .practice-choice-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin: 14px 0 26px; }
 .practice-choice-button, .practice-choice-unavailable { display: grid; place-items: center; min-height: 105px; padding: 18px; border: 2px solid var(--ink); border-radius: 20px; text-align: center; }
 .practice-choice-button { border-bottom-width: 5px; color: var(--ink); background: white; font: inherit; cursor: pointer; box-shadow: var(--shadow-small); transition: transform .16s ease, box-shadow .16s ease; }
 .practice-choice-button:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
-.practice-choice-button.selected { border: 2px solid var(--ink); color: white; background: var(--orange); box-shadow: 3px 3px 0 var(--ink); transform: none; }
+.practice-choice-button.selected { border: 2px solid var(--ink); color: white; background: var(--green); box-shadow: 3px 3px 0 var(--ink); transform: none; }
 .practice-choice-button .ui-icon, .practice-choice-unavailable .ui-icon { width: 1.45em; height: 1.45em; vertical-align: -.35em; }
 .practice-choice-button.review .ui-icon, .practice-choice-unavailable.review .ui-icon { color: var(--blue-dark); }
 .practice-choice-button.weak .ui-icon, .practice-choice-unavailable.weak .ui-icon { color: var(--orange-dark); }
@@ -248,6 +250,7 @@ h2 { color: var(--orange-dark); }
 .practice-choice-unavailable { border-color: var(--line); color: var(--muted); background: #f6f6f4; }
 .practice-start { margin-top: 4px; }
 #start-practice { min-width: 300px; display: inline-flex; align-items: center; justify-content: center; gap: 12px; }
+#start-practice.button { color: var(--ink); background: var(--yellow); }
 .compact-mode { display: flex; justify-content: center; flex-wrap: wrap; margin: 14px 0; }
 .compact-mode .mode-button { min-width: 0; padding: 11px 14px; }
 .empty { padding: 45px 15px; text-align: center; color: #687080; }
@@ -386,6 +389,8 @@ footer small { font-size: .75rem; font-weight: 600; }
   .record-tools { align-items: stretch; flex-direction: column; }
   .record-tools select, .record-tools .button { width: 100%; }
   .records-table-scroll { max-height: 430px; }
+  .weak-table th:nth-child(2), .weak-table th:nth-child(3), .weak-table th:nth-child(4),
+  .weak-table td:nth-child(2), .weak-table td:nth-child(3), .weak-table td:nth-child(4) { display: none; }
   .point-rules { grid-template-columns: repeat(2, 1fr); }
   .practice-choice-grid { grid-template-columns: 1fr; }
   #start-practice { width: 100%; min-width: 0; }
