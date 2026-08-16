@@ -141,7 +141,7 @@ h2 { color: var(--orange-dark); }
 .picker-step legend { padding: 0 12px; color: var(--ink); font-size: 1.2rem; font-weight: 900; }
 .step-number { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; margin-right: 9px; border: 2px solid var(--ink); border-radius: 50%; color: white; background: var(--orange); box-shadow: 2px 2px 0 var(--ink); font-family: Arial, sans-serif; line-height: 1; vertical-align: middle; }
 .picker-options { display: grid; gap: 12px; justify-content: center; }
-.mode-options { grid-template-columns: repeat(4, minmax(150px, 1fr)); }
+.mode-options { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .count-options { grid-template-columns: repeat(4, minmax(130px, 1fr)); }
 .delay-options { grid-template-columns: repeat(4, minmax(130px, 1fr)); }
 .stage-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 4px 0 0; }
@@ -252,8 +252,8 @@ h2 { color: var(--orange-dark); }
 .practice-start { margin-top: 4px; }
 #start-practice { min-width: 300px; display: inline-flex; align-items: center; justify-content: center; gap: 12px; }
 #start-practice.button { color: var(--ink); background: var(--yellow); }
-.compact-mode { display: flex; justify-content: center; flex-wrap: wrap; margin: 14px 0; }
-.compact-mode .mode-button { min-width: 0; padding: 11px 14px; }
+.compact-mode { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; width: 100%; margin: 14px 0; }
+.compact-mode .mode-button { width: 100%; min-width: 0; margin: 0; padding: 14px 12px; }
 .empty { padding: 45px 15px; text-align: center; color: #687080; }
 .note { padding: 13px 17px; border: 1px solid #cce7f8; border-left: 5px solid var(--blue); background: #edf8ff; border-radius: 11px; }
 .research-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 28px; }
@@ -378,6 +378,7 @@ footer small { font-size: .75rem; font-weight: 600; }
   .stage-button.random { grid-column: span 2; }
   .picker-step { padding: 10px 0 16px; }
   .mode-options, .count-options, .delay-options { grid-template-columns: repeat(2, 1fr); }
+  .compact-mode { grid-template-columns: repeat(2, 1fr); }
   #start-selected-stages { width: 100%; min-width: 0; }
   .answer-row { align-items: stretch; flex-direction: column; }
   .answer-input { width: 100%; }
